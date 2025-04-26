@@ -1,0 +1,10 @@
+.gallery {
+    display: flex;
+    flex-wrap: wrap;
+    background-color: red;
+
+
+}
+
+.image-item {background-color: blue;}
+
