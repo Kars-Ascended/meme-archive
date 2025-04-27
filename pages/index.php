@@ -1,6 +1,6 @@
 <?php
 // Load data from the JSON file if it exists
-$tagDataFile = '../uploads/data.json';
+$tagDataFile = '../backend/data.json';
 $tagData = file_exists($tagDataFile) ? json_decode(file_get_contents($tagDataFile), true) : [];
 ?>
 
@@ -53,12 +53,12 @@ $tagData = file_exists($tagDataFile) ? json_decode(file_get_contents($tagDataFil
         <div class="image-item">
             <?php if ($isVideo): ?>
                 <video controls>
-                    <source src="../uploads/memes/<?php echo htmlspecialchars($file); ?>" 
+                    <source src="http://192.168.0.19/mnt/archive/memes/uploads/<?php echo htmlspecialchars($file); ?>" 
                             type="video/<?php echo $fileExt; ?>">
                     Your browser does not support the video tag.
                 </video>
             <?php else: ?>
-                <img src="../uploads/memes/<?php echo htmlspecialchars($file); ?>" 
+                <img src="http://192.168.0.19/mnt/archive/memes/uploads/<?php echo htmlspecialchars($file); ?>" 
                      alt="<?php echo htmlspecialchars($file); ?>">
             <?php endif; ?>
             <br>
