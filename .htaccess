@@ -1,7 +1,0 @@
-RewriteEngine On
-
-# Redirect from root (/) to /pages
-RewriteRule ^$ /pages/ [L,R=301]
-
-# If your pages need to be pretty URLs (like example.com/about), use this:
-# RewriteRule ^([a-zA-Z0-9-]+)/?$ /pages/$1 [L]
