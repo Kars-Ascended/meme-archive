@@ -1,65 +1,93 @@
 <?php
-// Load data from the JSON file if it exists
-$tagDataFile = '../backend/data.json';
-$tagData = file_exists($tagDataFile) ? json_decode(file_get_contents($tagDataFile), true) : [];
+$uploadDir = '/mnt/archive/memes/uploads/';
+$dataFile = '../backend/data.json';
+$message = '';
+
+// Create directories if they don't exist
+if (!file_exists($uploadDir)) {
+    mkdir($uploadDir, 0755, true);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Handle image upload
-    if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
-        $originalName = basename($_FILES['image']['name']);
-        $extension = pathinfo($originalName, PATHINFO_EXTENSION);
-        $nameWithoutExt = pathinfo($originalName, PATHINFO_FILENAME);
-
-        // Generate unique filename if original already exists
-        $counter = 0;
-        $uploadDir = '/mnt/archive/memes/uploads/'; // Filesystem path
-        $imageName = $originalName;
-
-        while (file_exists($uploadDir . $imageName)) {
-            $randomString = substr(md5(uniqid()), 0, 8);
-            $imageName = $nameWithoutExt . '_' . $randomString . '.' . $extension;
-        }
-
-        $destinationPath = $uploadDir . $imageName;
-
-        // Move the uploaded file to the uploads directory
-        if (move_uploaded_file($_FILES['image']['tmp_name'], $destinationPath)) {
-            // File moved successfully
-
-            // Handle tags
-            $tags = isset($_POST['tags']) ? explode(',', $_POST['tags']) : [];
-            $tags = array_map('trim', $tags);  // Clean up spaces
-
-            // Save the file info using the public URL for later use/display
-            $publicUrl = 'http://192.168.0.19/mnt/archive/memes/uploads/' . $imageName;
-            $tagData[$publicUrl] = $tags;
-
-            // Save the updated data back to the JSON file
-            file_put_contents($tagDataFile, json_encode($tagData, JSON_PRETTY_PRINT));
+    if (isset($_FILES['image']) && isset($_POST['tags'])) {
+        $file = $_FILES['image'];
+        $tags = array_map('trim', explode(',', $_POST['tags']));
+        
+        // Validate file
+        $allowedTypes = [
+            'image/jpeg', 'image/png', 'image/gif',
+            'video/mp4', 'video/webm', 'video/ogg'
+        ];
+        if (in_array($file['type'], $allowedTypes)) {
+            // Generate safe filename
+            $filename = uniqid() . '_' . preg_replace("/[^a-zA-Z0-9.]/", "", $file['name']);
+            $filepath = $uploadDir . $filename;
+            
+            if (move_uploaded_file($file['tmp_name'], $filepath)) {
+                // Load existing data
+                $jsonData = file_exists($dataFile) ? json_decode(file_get_contents($dataFile), true) : [];
+                if (!is_array($jsonData)) $jsonData = [];
+                
+                // Add new entry
+                $jsonData[] = [
+                    'filename' => $filename,
+                    'originalName' => $file['name'],
+                    'tags' => $tags,
+                    'uploadDate' => date('Y-m-d H:i:s'),
+                    'filesize' => $file['size']
+                ];
+                
+                // Save JSON data
+                if (file_put_contents($dataFile, json_encode($jsonData, JSON_PRETTY_PRINT))) {
+                    $message = "File uploaded successfully!";
+                } else {
+                    $message = "Error saving metadata!";
+                }
+            } else {
+                $message = "Error uploading file!";
+            }
         } else {
-            echo "Failed to move uploaded file.";
+            $message = "Invalid file type! Only JPG, PNG and GIF allowed.";
         }
     }
 }
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <?php include '../backend/meta.php'; ?>
+    <title>Meme Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; }
+        .message { padding: 10px; margin-bottom: 15px; }
+        .success { background-color: #dff0d8; border: 1px solid #d6e9c6; }
+        .error { background-color: #f2dede; border: 1px solid #ebccd1; }
+    </style>
 </head>
 <body>
+    <?php if ($message): ?>
+        <div class="message <?php echo strpos($message, 'successfully') !== false ? 'success' : 'error'; ?>">
+            <?php echo htmlspecialchars($message); ?>
+        </div>
+    <?php endif; ?>
 
-<h1>Upload Meme + Tags</h1>
-<form method="POST" enctype="multipart/form-data">
-    <label for="image">Choose an image:</label>
-    <input type="file" name="image" id="image" required><br><br>
-
-    <label for="tags">Enter tags (comma separated):</label>
-    <input type="text" name="tags" id="tags" placeholder="e.g. cat, funny, reaction" required><br><br>
-
-    <button type="submit">Upload</button>
-</form>
-
+    <h1>Upload a Meme</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="image">Select Media:</label>
+            <input type="file" name="image" id="image" required 
+                   accept="image/jpeg,image/png,image/gif,video/mp4,video/webm,video/ogg">
+            <small>Supported formats: JPG, PNG, GIF, MP4, WebM, OGG</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="tags">Tags (comma-separated):</label>
+            <input type="text" name="tags" id="tags" required placeholder="funny, cats, reaction">
+        </div>
+        
+        <button type="submit">Upload</button>
+    </form>
 </body>
 </html>
