@@ -1,11 +1,7 @@
 RewriteEngine On
 
-# Redirect root URL to /pages/home
-RewriteRule ^$ /home [L,R=302]
+# Redirect from root (/) to /pages
+RewriteRule ^$ /pages/ [L,R=301]
 
-RewriteRule ^home$ index.php [L]
-
-# hide 'pages' from url
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ /pages/$1 [L]
+# If your pages need to be pretty URLs (like example.com/about), use this:
+# RewriteRule ^([a-zA-Z0-9-]+)/?$ /pages/$1 [L]
