@@ -18,16 +18,6 @@
                    value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
             <button type="submit">Search</button>
         </form>
-        <h3>Tags:</h3>
-        <div class="tag-cloud">
-            <a href="index.php" <?php echo $searchTag === '' ? 'class="active-tag"' : ''; ?>>All</a>
-            <?php foreach ($allTags as $tag): ?>
-                <a href="?tag=<?php echo urlencode(trim($tag, '"')); ?>" 
-                   <?php echo $searchTag === $tag ? 'class="active-tag"' : ''; ?>>
-                    <?php echo htmlspecialchars(trim($tag, '"')); ?>
-                </a>
-            <?php endforeach; ?>
-        </div>
     </div>
 
     <div class="toggle-section">
